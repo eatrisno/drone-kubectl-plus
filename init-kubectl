@@ -34,3 +34,10 @@ fi
 
 kubectl config set-context default --cluster=default --user=${PLUGIN_KUBERNETES_USER}
 kubectl config use-context default
+
+if [ ! -z ${APPLY_YAML_CONFIG} ]; then
+  init-deploy ${APPLY_YAML_CONFIG} deploy-app.yaml
+  kubectl apply -f deploy-app.yaml
+  rm deploy-app.yaml
+fi
+

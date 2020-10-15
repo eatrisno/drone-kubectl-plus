@@ -1,1 +1,0 @@
-cat $1.yaml | sed -E 's/\$\{([A-Z]+)\}/${\1}/g' | envsubst > deploy-app.yaml
