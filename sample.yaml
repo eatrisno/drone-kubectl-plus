@@ -1,0 +1,70 @@
+---
+kind: Ingress
+apiVersion: extensions/v1beta1
+metadata:
+  name: ${CICD_GIT_REPO_NAME}-lb
+  namespace: altoshift-${CICD_GIT_BRANCH}
+  labels:
+    app: ${CICD_GIT_REPO_NAME}-lb
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    certmanager.k8s.io/cluster-issuer: letsencrypt-prod
+spec:
+  rules:
+  - host: client-${CICD_GIT_BRANCH}.altoshift.com
+    http:
+      paths:
+      - backend:
+          serviceName: ${CICD_GIT_REPO_NAME}-service
+          servicePort: 8000
+        path: /graphql
+  tls:
+  - hosts:
+    - client-${CICD_GIT_BRANCH}.altoshift.com
+    secretName: altoshift-com
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: ${CICD_GIT_REPO_NAME}-service
+  namespace: altoshift-${CICD_GIT_BRANCH}
+spec:
+  selector:
+    app: ${CICD_GIT_REPO_NAME}
+  type: ClusterIP
+  ports:
+    - protocol: TCP
+      port: 8000
+      targetPort: 8000
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ${CICD_GIT_REPO_NAME}
+  namespace: altoshift-${CICD_GIT_BRANCH}
+  labels:
+    app: ${CICD_GIT_REPO_NAME}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ${CICD_GIT_REPO_NAME}
+  strategy:
+      rollingUpdate:
+        maxSurge: 25%
+        maxUnavailable: 25%
+      type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: ${CICD_GIT_REPO_NAME}
+    spec:
+      imagePullSecrets:
+      - name: pipeline-docker-registry
+      containers:
+      - name: ${CICD_GIT_REPO_NAME}
+        image: ${CICD_IMAGE}:${CICD_EXECUTION_SEQUENCE}
+        imagePullPolicy: IfNotPresent
+        envFrom:
+        - configMapRef:
+            name: environment
