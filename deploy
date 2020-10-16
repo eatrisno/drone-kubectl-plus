@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+set -e
+
+echo "init"
+./init-deploy ${1} deploy-app.yaml
+kubectl apply -f deploy-app.yaml
+rm deploy-app.yaml
+echo "done"

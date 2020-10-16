@@ -2,5 +2,4 @@
 
 set -e
 
-echo "set ENV"
 cat ${1} | sed -E 's/\$\{([A-Z]+)\}/${\1}/g' | envsubst > ${2}

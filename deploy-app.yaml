@@ -1,0 +1,70 @@
+---
+kind: Ingress
+apiVersion: extensions/v1beta1
+metadata:
+  name: hehehehhe-lb
+  namespace: altoshift-
+  labels:
+    app: hehehehhe-lb
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    certmanager.k8s.io/cluster-issuer: letsencrypt-prod
+spec:
+  rules:
+  - host: client-.altoshift.com
+    http:
+      paths:
+      - backend:
+          serviceName: hehehehhe-service
+          servicePort: 8000
+        path: /graphql
+  tls:
+  - hosts:
+    - client-.altoshift.com
+    secretName: altoshift-com
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: hehehehhe-service
+  namespace: altoshift-
+spec:
+  selector:
+    app: hehehehhe
+  type: ClusterIP
+  ports:
+    - protocol: TCP
+      port: 8000
+      targetPort: 8000
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hehehehhe
+  namespace: altoshift-
+  labels:
+    app: hehehehhe
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hehehehhe
+  strategy:
+      rollingUpdate:
+        maxSurge: 25%
+        maxUnavailable: 25%
+      type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: hehehehhe
+    spec:
+      imagePullSecrets:
+      - name: pipeline-docker-registry
+      containers:
+      - name: hehehehhe
+        image: :
+        imagePullPolicy: IfNotPresent
+        envFrom:
+        - configMapRef:
+            name: environment
